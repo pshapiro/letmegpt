@@ -62,7 +62,7 @@ const moveToSubmit = () => {
     // Redirect after cursor moves to submit button
     setTimeout(() => {
       const encodedPrompt = encodeURIComponent(prompt.value)
-      window.location.href = `https://chat.openai.com/?model=text-davinci-002-render-sha&prompt=${encodedPrompt}`
+      window.location.href = `https://chatgpt.com/?q=${encodedPrompt}`
     }, 500)
   }, 500)
 }
