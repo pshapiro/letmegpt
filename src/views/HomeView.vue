@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { sha256 } from 'js-sha256'
 
 const prompt = ref('')
 const generatedLink = ref('')
@@ -8,9 +9,14 @@ const router = useRouter()
 
 const generateLink = () => {
   if (!prompt.value.trim()) return
-  const encodedPrompt = encodeURIComponent(prompt.value.trim())
-  const domain = import.meta.env.VITE_APP_DOMAIN
-  const url = `${domain}/output?p=${encodedPrompt}`
+  const hash = sha256(prompt.value.trim())
+  const shortCode = hash.substring(0, 8)
+  const domain = import.meta.env.VITE_APP_DOMAIN || window.location.origin
+  const url = `${domain}/output?c=${shortCode}`
+  
+  // Store the prompt in session storage with the hash as the key
+  sessionStorage.setItem(`prompt_${shortCode}`, prompt.value.trim())
+  
   generatedLink.value = url
 }
 
@@ -23,8 +29,9 @@ const copyLink = async () => {
 }
 
 const viewLink = () => {
-  const encodedPrompt = encodeURIComponent(prompt.value.trim())
-  router.push(`/output?p=${encodedPrompt}`)
+  const hash = sha256(prompt.value.trim())
+  const shortCode = hash.substring(0, 8)
+  router.push(`/output?c=${shortCode}`)
 }
 </script>
 
