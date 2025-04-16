@@ -1,16 +1,23 @@
 {
   "compilerOptions": {
     "composite": true,
-    "target": "ES2022",
-    "lib": ["ES2023", "ES2022", "ES2021", "ES2020", "ES2019", "ES2018", "ES2017", "ES2016", "ES2015"],
+    "target": "ES2020",
+    "lib": [
+      "ES2020",
+      "ES2019",
+      "ES2018",
+      "ES2017",
+      "ES2016",
+      "ES2015"
+    ],
     "module": "ESNext",
     "moduleResolution": "bundler",
     "allowSyntheticDefaultImports": true,
     "strict": true,
+    "noEmit": true,
     "skipLibCheck": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "outDir": "./dist",
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true
