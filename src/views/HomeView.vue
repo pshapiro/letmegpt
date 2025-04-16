@@ -2,6 +2,7 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { sha256 } from 'js-sha256'
+import { encodePrompt } from '../utils/crypto'
 
 const prompt = ref('')
 const generatedLink = ref('')
@@ -9,12 +10,9 @@ const router = useRouter()
 
 const generateLink = () => {
   if (!prompt.value.trim()) return
-  const hash = sha256(prompt.value.trim())
-  const shortCode = hash.substring(0, 8)
-  // Store the prompt with the shortCode
-  localStorage.setItem(`prompt_${shortCode}`, prompt.value.trim())
+  const encoded = encodePrompt(prompt.value.trim())
   const domain = window.location.origin
-  const url = `${domain}/output?c=${shortCode}`
+  const url = `${domain}/output?q=${encoded}`
   generatedLink.value = url
 }
 
@@ -27,9 +25,8 @@ const copyLink = async () => {
 }
 
 const viewLink = () => {
-  const hash = sha256(prompt.value.trim())
-  const shortCode = hash.substring(0, 8)
-  router.push(`/output?c=${shortCode}`)
+  const encoded = encodePrompt(prompt.value.trim())
+  router.push(`/output?q=${encoded}`)
 }
 </script>
 
