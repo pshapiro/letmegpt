@@ -11,7 +11,7 @@ const generateLink = () => {
   if (!prompt.value.trim()) return
   const hash = sha256(prompt.value.trim())
   const shortCode = hash.substring(0, 8)
-  const domain = import.meta.env.VITE_APP_DOMAIN || window.location.origin
+  const domain = window.location.origin
   const url = `${domain}/output?c=${shortCode}`
   
   // Store the prompt in session storage with the hash as the key
