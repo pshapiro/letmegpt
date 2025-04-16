@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
+import { sha256 } from 'js-sha256'
 
 const route = useRoute()
+const router = useRouter()
 const prompt = ref('')
 const cursorPosition = ref({ x: 0, y: 0 })
 const inputRef = ref<HTMLInputElement | null>(null)
@@ -10,14 +12,22 @@ const submitRef = ref<HTMLButtonElement | null>(null)
 const displayText = ref('')
 
 onMounted(() => {
-  // Get and decode the prompt from URL
-  const urlPrompt = route.query.p as string
-  if (!urlPrompt) {
-    window.location.href = '/'
+  // Get the hash from URL
+  const shortCode = route.query.c as string
+  if (!shortCode) {
+    router.push('/')
     return
   }
-  
-  prompt.value = decodeURIComponent(urlPrompt)
+
+  // Get the prompt from the home page if it exists in session storage
+  const storedPrompt = sessionStorage.getItem(`prompt_${shortCode}`)
+  if (storedPrompt) {
+    prompt.value = storedPrompt
+  } else {
+    // If no stored prompt, redirect back to home
+    router.push('/')
+    return
+  }
   
   // Start animation after a short delay
   setTimeout(() => {
@@ -62,7 +72,7 @@ const moveToSubmit = () => {
     // Redirect after cursor moves to submit button
     setTimeout(() => {
       const encodedPrompt = encodeURIComponent(prompt.value)
-      window.location.href = `https://chatgpt.com/?q=${encodedPrompt}`
+      window.location.href = `https://chat.openai.com/share/compose?prompt=${encodedPrompt}`
     }, 500)
   }, 500)
 }
