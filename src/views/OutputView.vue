@@ -11,15 +11,16 @@ const submitRef = ref<HTMLButtonElement | null>(null)
 const displayText = ref('')
 
 onMounted(() => {
-  // Get the hash from URL
+  // Get the shortCode from URL
   const shortCode = route.query.c as string
+  
   if (!shortCode) {
     router.push('/')
     return
   }
 
-  // Get the prompt from session storage
-  const storedPrompt = sessionStorage.getItem(`prompt_${shortCode}`)
+  // Retrieve the prompt from localStorage
+  const storedPrompt = localStorage.getItem(`prompt_${shortCode}`)
   if (!storedPrompt) {
     router.push('/')
     return
@@ -69,8 +70,7 @@ const moveToSubmit = () => {
     
     // Redirect after cursor moves to submit button
     setTimeout(() => {
-      const encodedPrompt = encodeURIComponent(prompt.value)
-      window.location.href = `https://chat.openai.com/share/compose?prompt=${encodedPrompt}`
+      window.location.href = `https://chatgpt.com/?q=${encodeURIComponent(prompt.value)}`
     }, 500)
   }, 500)
 }
