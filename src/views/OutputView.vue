@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { decodePrompt } from '../utils/crypto'
 
 const route = useRoute()
 const router = useRouter()
@@ -11,22 +12,20 @@ const submitRef = ref<HTMLButtonElement | null>(null)
 const displayText = ref('')
 
 onMounted(() => {
-  // Get the shortCode from URL
-  const shortCode = route.query.c as string
+  // Get and decode the prompt from URL
+  const encodedPrompt = route.query.q as string
+  if (!encodedPrompt) {
+    router.push('/')
+    return
+  }
   
-  if (!shortCode) {
+  const decodedPrompt = decodePrompt(encodedPrompt)
+  if (!decodedPrompt) {
     router.push('/')
     return
   }
-
-  // Retrieve the prompt from localStorage
-  const storedPrompt = localStorage.getItem(`prompt_${shortCode}`)
-  if (!storedPrompt) {
-    router.push('/')
-    return
-  }
-
-  prompt.value = storedPrompt
+  
+  prompt.value = decodedPrompt
   
   // Start animation after a short delay
   setTimeout(() => {
