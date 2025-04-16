@@ -11,12 +11,10 @@ const generateLink = () => {
   if (!prompt.value.trim()) return
   const hash = sha256(prompt.value.trim())
   const shortCode = hash.substring(0, 8)
+  // Store the prompt with the shortCode
+  localStorage.setItem(`prompt_${shortCode}`, prompt.value.trim())
   const domain = window.location.origin
   const url = `${domain}/output?c=${shortCode}`
-  
-  // Store the prompt in session storage with the hash as the key
-  sessionStorage.setItem(`prompt_${shortCode}`, prompt.value.trim())
-  
   generatedLink.value = url
 }
 
