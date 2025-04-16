@@ -1,5 +1,5 @@
 // Simple XOR cipher implementation
-const STATIC_KEY = 'LMGPTTFY2025';
+const STATIC_KEY = 'GPT';
 
 function xorCipher(str: string, key: string): string {
   let result = '';
