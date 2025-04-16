@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { sha256 } from 'js-sha256'
 
 const route = useRoute()
 const router = useRouter()
@@ -19,15 +18,14 @@ onMounted(() => {
     return
   }
 
-  // Get the prompt from the home page if it exists in session storage
+  // Get the prompt from session storage
   const storedPrompt = sessionStorage.getItem(`prompt_${shortCode}`)
-  if (storedPrompt) {
-    prompt.value = storedPrompt
-  } else {
-    // If no stored prompt, redirect back to home
+  if (!storedPrompt) {
     router.push('/')
     return
   }
+
+  prompt.value = storedPrompt
   
   // Start animation after a short delay
   setTimeout(() => {
