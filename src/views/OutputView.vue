@@ -1,125 +1,202 @@
 <script setup lang="ts">
-import { ref } from 'vue'
-import { useRouter } from 'vue-router'
-import { sha256 } from 'js-sha256'
+import { ref, onMounted } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 
-const prompt = ref('')
-const generatedLink = ref('')
+const route = useRoute()
 const router = useRouter()
+const prompt = ref('')
+const cursorPosition = ref({ x: 0, y: 0 })
+const inputRef = ref<HTMLInputElement | null>(null)
+const submitRef = ref<HTMLButtonElement | null>(null)
+const displayText = ref('')
 
-const generateLink = () => {
-  if (!prompt.value.trim()) return
-  const hash = sha256(prompt.value.trim())
-  const shortCode = hash.substring(0, 8)
-  const domain = window.location.origin
-  const url = `${domain}/output?c=${shortCode}`
-  
-  // Store the prompt in session storage with the hash as the key
-  sessionStorage.setItem(`prompt_${shortCode}`, prompt.value.trim())
-  
-  generatedLink.value = url
-}
-
-const copyLink = async () => {
-  try {
-    await navigator.clipboard.writeText(generatedLink.value)
-  } catch (err) {
-    console.error('Failed to copy:', err)
+onMounted(() => {
+  // Get the hash from URL
+  const shortCode = route.query.c as string
+  if (!shortCode) {
+    router.push('/')
+    return
   }
-}
 
-const viewLink = () => {
-  const hash = sha256(prompt.value.trim())
-  const shortCode = hash.substring(0, 8)
-  router.push(`/output?c=${shortCode}`)
+  // Get the prompt from session storage
+  const storedPrompt = sessionStorage.getItem(`prompt_${shortCode}`)
+  if (!storedPrompt) {
+    router.push('/')
+    return
+  }
+
+  prompt.value = storedPrompt
+  
+  // Start animation after a short delay
+  setTimeout(() => {
+    if (!inputRef.value) return
+    
+    // Position cursor at input
+    const rect = inputRef.value.getBoundingClientRect()
+    cursorPosition.value = {
+      x: rect.left + 20,
+      y: rect.top + rect.height / 2
+    }
+    
+    // Type out the text
+    let currentIndex = 0
+    const typeInterval = setInterval(() => {
+      if (currentIndex >= prompt.value.length) {
+        clearInterval(typeInterval)
+        moveToSubmit()
+        return
+      }
+      
+      displayText.value = prompt.value.substring(0, currentIndex + 1)
+      if (inputRef.value) {
+        // Scroll to end of input to show latest typed characters
+        inputRef.value.scrollLeft = inputRef.value.scrollWidth
+      }
+      currentIndex++
+    }, 100)
+  }, 1000)
+})
+
+const moveToSubmit = () => {
+  if (!submitRef.value) return
+  
+  setTimeout(() => {
+    const submitRect = submitRef.value!.getBoundingClientRect()
+    cursorPosition.value = {
+      x: submitRect.left + submitRect.width / 2,
+      y: submitRect.top + submitRect.height / 2
+    }
+    
+    // Redirect after cursor moves to submit button
+    setTimeout(() => {
+      const encodedPrompt = encodeURIComponent(prompt.value)
+      window.location.href = `https://chat.openai.com/share/compose?prompt=${encodedPrompt}`
+    }, 500)
+  }, 500)
 }
 </script>
 
 <template>
-  <main class="home">
-    <h1>Let Me ChatGPT That For You</h1>
+  <main class="output">
+    <h1>What can I help with?</h1>
     
-    <div class="input-container">
+    <div class="chat-input">
       <input
-        v-model="prompt"
+        ref="inputRef"
         type="text"
-        placeholder="Enter your prompt..."
-        @keyup.enter="generateLink"
+        :value="displayText"
+        placeholder="Message ChatGPT..."
+        readonly
       >
-      <button @click="generateLink">Show them</button>
+      <button class="mic">
+        <span class="sr-only">Voice input</span>
+        🎤
+      </button>
+      <button
+        ref="submitRef"
+        class="submit"
+        aria-label="Send message"
+      >
+        ↑
+      </button>
     </div>
 
-    <div v-if="generatedLink" class="link-container">
-      <input readonly :value="generatedLink">
-      <div class="actions">
-        <button @click="copyLink">Copy link</button>
-        <button @click="viewLink">View link</button>
-      </div>
-    </div>
+    <div
+      class="cursor"
+      :style="{
+        left: cursorPosition.x + 'px',
+        top: cursorPosition.y + 'px'
+      }"
+    ></div>
   </main>
 </template>
 
 <style scoped>
-.home {
+.output {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2rem;
+  min-height: 100vh;
   padding: 2rem;
-  max-width: 800px;
-  margin: 0 auto;
+  background-color: #ffffff;
 }
 
 h1 {
   font-size: 2.5rem;
-  text-align: center;
-  margin: 0;
+  margin-bottom: 2rem;
+  color: #000000;
 }
 
-.input-container {
-  display: flex;
-  gap: 1rem;
+.chat-input {
+  position: relative;
   width: 100%;
+  max-width: 800px;
+  display: flex;
+  align-items: center;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 1rem;
+  padding: 0.75rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 input {
   flex: 1;
-  padding: 0.75rem 1rem;
-  font-size: 1rem;
-  border: 2px solid #e5e7eb;
-  border-radius: 0.5rem;
-  outline: none;
-}
-
-input:focus {
-  border-color: #646cff;
-}
-
-button {
-  padding: 0.75rem 1.5rem;
-  font-size: 1rem;
-  background-color: #646cff;
-  color: white;
   border: none;
-  border-radius: 0.5rem;
+  outline: none;
+  padding: 0.5rem;
+  font-size: 1rem;
+  background: transparent;
+  color: #000000;
+  white-space: nowrap;
+  overflow-x: auto;
+  overflow-y: hidden;
+  text-overflow: clip;
+  -webkit-overflow-scrolling: touch;
+}
+
+input::placeholder {
+  color: #6b7280;
+}
+
+.mic, .submit {
+  background: none;
+  border: none;
+  padding: 0.5rem;
   cursor: pointer;
-  transition: background-color 0.2s;
-}
-
-button:hover {
-  background-color: #535bf2;
-}
-
-.link-container {
-  width: 100%;
   display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.actions {
-  display: flex;
-  gap: 1rem;
+  align-items: center;
   justify-content: center;
+}
+
+.submit {
+  background-color: #000000;
+  color: white;
+  border-radius: 0.5rem;
+  width: 32px;
+  height: 32px;
+}
+
+.cursor {
+  position: fixed;
+  width: 20px;
+  height: 20px;
+  background: #646cff;
+  border-radius: 50%;
+  pointer-events: none;
+  transition: all 0.5s ease;
+  z-index: 1000;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 </style>
