@@ -69,7 +69,7 @@ const moveToSubmit = () => {
     
     // Redirect after cursor moves to submit button
     setTimeout(() => {
-      window.location.href = `https://chatgpt.com/?q=${encodeURIComponent(prompt.value)}`
+      window.location.href = `https://chatgpt.com/?hints=search&q=${encodeURIComponent(prompt.value)}`
     }, 500)
   }, 500)
 }
